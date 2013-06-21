@@ -428,7 +428,7 @@ gom_miner_setup_account (GomMiner *self,
 
 typedef struct {
   GomMiner *self;
-  GList *doc_objects;
+  GList *content_objects;
   GList *acc_objects;
   GList *old_datasources;
 } CleanupJob;
@@ -442,7 +442,7 @@ cleanup_old_accounts_done (gpointer data)
   GomMiner *self = job->self;
 
   /* now setup all the current accounts */
-  for (l = job->doc_objects; l != NULL; l = l->next)
+  for (l = job->content_objects; l != NULL; l = l->next)
     {
       object = l->data;
       gom_miner_setup_account (self, object);
@@ -450,10 +450,10 @@ cleanup_old_accounts_done (gpointer data)
       g_object_unref (object);
     }
 
-  if (job->doc_objects != NULL)
+  if (job->content_objects != NULL)
     {
-      g_list_free (job->doc_objects);
-      job->doc_objects = NULL;
+      g_list_free (job->content_objects);
+      job->content_objects = NULL;
     }
 
   if (job->acc_objects != NULL)
@@ -623,13 +623,13 @@ cleanup_job (GIOSchedulerJob *sched_job,
 
 static void
 gom_miner_cleanup_old_accounts (GomMiner *self,
-                                GList *doc_objects,
+                                GList *content_objects,
                                 GList *acc_objects)
 {
   CleanupJob *job = g_slice_new0 (CleanupJob);
 
   job->self = g_object_ref (self);
-  job->doc_objects = doc_objects;
+  job->content_objects = content_objects;
   job->acc_objects = acc_objects;
 
   g_io_scheduler_push_job (cleanup_job, job, NULL,
@@ -641,13 +641,14 @@ static void
 gom_miner_refresh_db_real (GomMiner *self)
 {
   GoaDocuments *documents;
+  GoaPhotos *photos;
   GoaAccount *account;
   GoaObject *object;
   const gchar *provider_type;
-  GList *accounts, *doc_objects, *acc_objects, *l;
+  GList *accounts, *content_objects, *acc_objects, *l;
   GomMinerClass *miner_class = GOM_MINER_GET_CLASS (self);
 
-  doc_objects = NULL;
+  content_objects = NULL;
   acc_objects = NULL;
 
   accounts = goa_client_get_accounts (self->priv->client);
@@ -666,15 +667,16 @@ gom_miner_refresh_db_real (GomMiner *self)
       acc_objects = g_list_append (acc_objects, g_object_ref (object));
 
       documents = goa_object_peek_documents (object);
-      if (documents == NULL)
+      photos = goa_object_peek_photos (object);
+      if (documents == NULL && photos == NULL)
         continue;
 
-      doc_objects = g_list_append (doc_objects, g_object_ref (object));
+      content_objects = g_list_append (content_objects, g_object_ref (object));
     }
 
   g_list_free_full (accounts, g_object_unref);
 
-  gom_miner_cleanup_old_accounts (self, doc_objects, acc_objects);
+  gom_miner_cleanup_old_accounts (self, content_objects, acc_objects);
 }
 
 static void
