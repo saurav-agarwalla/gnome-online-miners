@@ -31,8 +31,35 @@ libgom_1_0_la_LDFLAGS = \
     $(NULL)
 
 libexec_PROGRAMS = \
+    gom-flickr-miner \
     gom-gdata-miner \
     gom-zpj-miner \
+    $(NULL)
+
+gom_flickr_miner_SOURCES = \
+    gom-flickr-miner-main.c \
+    gom-flickr-miner.c \
+    gom-flickr-miner.h \
+    $(NULL)
+
+gom_flickr_miner_CPPFLAGS = \
+    -DG_LOG_DOMAIN=\"Gom\" \
+    -DG_DISABLE_DEPRECATED \
+    -I$(top_srcdir)/src \
+    $(GIO_CFLAGS) \
+    $(GLIB_CFLAGS) \
+    $(GOA_CFLAGS) \
+    $(GRILO_CFLAGS) \
+    $(TRACKER_CFLAGS) \
+    $(NULL)
+
+gom_flickr_miner_LDADD = \
+    libgom-1.0.la  \
+    $(GIO_LIBS) \
+    $(GLIB_LIBS) \
+    $(GOA_LIBS) \
+    $(GRILO_LIBS) \
+    $(TRACKER_LIBS) \
     $(NULL)
 
 gom_gdata_miner_SOURCES = \
