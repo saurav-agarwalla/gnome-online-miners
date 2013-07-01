@@ -97,12 +97,13 @@ account_miner_job_process_entry (GomAccountMinerJob *job,
                                  FlickrEntry *entry,
                                  GError **error)
 {
-  GDateTime *created_time;
+  GDateTime *created_time, *modification_date;
   gchar *contact_resource;
   gchar *resource = NULL;
   gchar *date, *identifier;
   const gchar *class = NULL, *id, *mime, *name;
-  gboolean resource_exists;
+  gboolean resource_exists, mtime_changed;
+  gint64 new_mtime;
 
   if (op_type == OP_CREATE_HIEARCHY && entry->parent == NULL)
     return TRUE;
@@ -171,6 +172,39 @@ account_miner_job_process_entry (GomAccountMinerJob *job,
   if (op_type == OP_CREATE_HIEARCHY)
     goto out;
 
+  /* only GRL_METADATA_KEY_CREATION_DATE is
+   * implemented, GRL_METADATA_KEY_MODIFICATION_DATE is not
+   */
+  created_time = modification_date = grl_media_get_creation_date (entry->media);
+  new_mtime = g_date_time_to_unix (modification_date);
+  mtime_changed = gom_tracker_update_mtime (job->connection, new_mtime,
+                                            resource_exists, identifier, resource,
+                                            job->cancellable, error);
+
+  if (*error != NULL)
+    goto out;
+
+  /* avoid updating the DB if the entry already exists and has not
+   * been modified since our last run.
+   */
+  if (!mtime_changed)
+    goto out;
+
+  /* the resource changed - just set all the properties again */
+  if (created_time != NULL)
+    {
+      date = gom_iso8601_from_timestamp (g_date_time_to_unix (created_time));
+      gom_tracker_sparql_connection_insert_or_replace_triple
+        (job->connection,
+         job->cancellable, error,
+         job->datasource_urn, resource,
+         "nie:contentCreated", date);
+      g_free (date);
+    }
+
+  if (*error != NULL)
+    goto out;
+
   gom_tracker_sparql_connection_insert_or_replace_triple
     (job->connection,
      job->cancellable, error,
@@ -229,20 +263,6 @@ account_miner_job_process_entry (GomAccountMinerJob *job,
      "nco:creator", contact_resource);
   g_free (contact_resource);
 
-  if (*error != NULL)
-    goto out;
-
-  created_time = grl_media_get_creation_date (entry->media);
-  if (created_time != NULL)
-    {
-      date = gom_iso8601_from_timestamp (g_date_time_to_unix (created_time));
-      gom_tracker_sparql_connection_insert_or_replace_triple
-        (job->connection,
-         job->cancellable, error,
-         job->datasource_urn, resource,
-         "nie:contentCreated", date);
-      g_free (date);
-    }
   if (*error != NULL)
     goto out;
 
