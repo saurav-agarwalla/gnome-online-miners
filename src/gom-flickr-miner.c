@@ -99,9 +99,11 @@ account_miner_job_process_entry (GomAccountMinerJob *job,
 {
   GDateTime *created_time, *modification_date;
   gchar *contact_resource;
+  gchar *mime;
   gchar *resource = NULL;
   gchar *date, *identifier;
-  const gchar *class = NULL, *id, *mime, *name;
+  const gchar *class = NULL, *id;
+  const gchar *url;
   gboolean resource_exists, mtime_changed;
   gint64 new_mtime;
 
@@ -116,8 +118,6 @@ account_miner_job_process_entry (GomAccountMinerJob *job,
 
   /* remove from the list of the previous resources */
   g_hash_table_remove (job->previous_resources, identifier);
-
-  name = grl_media_get_title (entry->media);
 
   if (GRL_IS_MEDIA_BOX (entry->media))
     class = "nfo:DataContainer";
@@ -205,11 +205,12 @@ account_miner_job_process_entry (GomAccountMinerJob *job,
   if (*error != NULL)
     goto out;
 
+  url = grl_media_get_url (entry->media);
   gom_tracker_sparql_connection_insert_or_replace_triple
     (job->connection,
      job->cancellable, error,
      job->datasource_urn, resource,
-     "nie:url", grl_media_get_url (entry->media));
+     "nie:url", url);
 
   if (*error != NULL)
     goto out;
@@ -227,15 +228,12 @@ account_miner_job_process_entry (GomAccountMinerJob *job,
     (job->connection,
      job->cancellable, error,
      job->datasource_urn, resource,
-     "nfo:fileName", name);
+     "nfo:fileName", grl_media_get_title (entry->media));
 
   if (*error != NULL)
     goto out;
 
-  /* FIXME: photos don't have a MIME type */
-  mime = grl_media_get_mime (entry->media);
-  if (mime == NULL && name != NULL)
-    mime = gom_filename_to_mime_type (name);
+  mime = g_content_type_guess (url, NULL, 0, NULL);
   if (mime != NULL)
     {
       gom_tracker_sparql_connection_insert_or_replace_triple
@@ -243,6 +241,7 @@ account_miner_job_process_entry (GomAccountMinerJob *job,
          job->cancellable, error,
          job->datasource_urn, resource,
          "nie:mimeType", mime);
+      g_free (mime);
 
       if (*error != NULL)
         goto out;
