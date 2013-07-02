@@ -32,7 +32,7 @@
 
 static const gchar introspection_xml[] =
   "<node>"
-  "  <interface name='org.gnome.Documents.Miner'>"
+  "  <interface name='org.gnome.OnlineMiners.Miner'>"
   "    <method name='RefreshDB'>"
   "    </method>"
   "    <property name='DisplayName' type='s' access='read'/>"
