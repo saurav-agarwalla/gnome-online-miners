@@ -107,7 +107,7 @@ account_miner_job_process_entry (GomAccountMinerJob *job,
   gboolean resource_exists, mtime_changed;
   gint64 new_mtime;
 
-  if (op_type == OP_CREATE_HIEARCHY && entry->parent == NULL)
+  if (op_type == OP_CREATE_HIEARCHY && entry->parent == NULL && !GRL_IS_MEDIA_BOX (entry->media))
     return TRUE;
 
   id = grl_media_get_id (entry->media);
