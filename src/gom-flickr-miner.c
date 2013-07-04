@@ -169,6 +169,15 @@ account_miner_job_process_entry (GomAccountMinerJob *job,
         goto out;
     }
 
+  gom_tracker_sparql_connection_insert_or_replace_triple
+    (job->connection,
+     job->cancellable, error,
+     job->datasource_urn, resource,
+     "nie:title", grl_media_get_title (entry->media));
+
+  if (*error != NULL)
+    goto out;
+
   if (op_type == OP_CREATE_HIEARCHY)
     goto out;
 
@@ -220,15 +229,6 @@ account_miner_job_process_entry (GomAccountMinerJob *job,
      job->cancellable, error,
      job->datasource_urn, resource,
      "nie:description", grl_media_get_description (entry->media));
-
-  if (*error != NULL)
-    goto out;
-
-  gom_tracker_sparql_connection_insert_or_replace_triple
-    (job->connection,
-     job->cancellable, error,
-     job->datasource_urn, resource,
-     "nfo:fileName", grl_media_get_title (entry->media));
 
   if (*error != NULL)
     goto out;
