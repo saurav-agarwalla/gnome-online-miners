@@ -1,2 +1,6 @@
 Overview of changes in 3.9.4
 ============================
+
+* First release after being split out from gnome-documents
+
+* Support Flickr (700897)
