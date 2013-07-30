@@ -1,6 +1,10 @@
 Overview of changes in 3.9.5
 ============================
 
+* Bugs fixed:
+ 703915 flickr: Fix hierarchy creation
+ 703917 flickr: Store the title as nie:title, not nfo:fileName
+
 
 Overview of changes in 3.9.4
 ============================
