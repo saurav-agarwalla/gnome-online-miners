@@ -53,12 +53,9 @@ G_BEGIN_DECLS
 
 typedef struct _GomGDataMiner GomGDataMiner;
 typedef struct _GomGDataMinerClass GomGDataMinerClass;
-typedef struct _GomGDataMinerPrivate GomGDataMinerPrivate;
 
 struct _GomGDataMiner {
   GomMiner parent;
-
-  GomGDataMinerPrivate *priv;
 };
 
 struct _GomGDataMinerClass {

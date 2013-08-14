@@ -53,12 +53,9 @@ G_BEGIN_DECLS
 
 typedef struct _GomZpjMiner GomZpjMiner;
 typedef struct _GomZpjMinerClass GomZpjMinerClass;
-typedef struct _GomZpjMinerPrivate GomZpjMinerPrivate;
 
 struct _GomZpjMiner {
   GomMiner parent;
-
-  GomZpjMinerPrivate *priv;
 };
 
 struct _GomZpjMinerClass {
