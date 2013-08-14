@@ -33,6 +33,7 @@ libgom_1_0_la_LDFLAGS = \
 libexec_PROGRAMS = \
     gom-flickr-miner \
     gom-gdata-miner \
+    gom-owncloud-miner \
     gom-zpj-miner \
     $(NULL)
 
@@ -82,6 +83,30 @@ gom_gdata_miner_CPPFLAGS = \
 gom_gdata_miner_LDADD = \
     libgom-1.0.la  \
     $(GDATA_LIBS) \
+    $(GIO_LIBS) \
+    $(GLIB_LIBS) \
+    $(GOA_LIBS) \
+    $(TRACKER_LIBS) \
+    $(NULL)
+
+gom_owncloud_miner_SOURCES = \
+    gom-owncloud-miner-main.c \
+    gom-owncloud-miner.c \
+    gom-owncloud-miner.h \
+    $(NULL)
+
+gom_owncloud_miner_CPPFLAGS = \
+    -DG_LOG_DOMAIN=\"Gom\" \
+    -DG_DISABLE_DEPRECATED \
+    -I$(top_srcdir)/src \
+    $(GIO_CFLAGS) \
+    $(GLIB_CFLAGS) \
+    $(GOA_CFLAGS) \
+    $(TRACKER_CFLAGS) \
+    $(NULL)
+
+gom_owncloud_miner_LDADD = \
+    libgom-1.0.la  \
     $(GIO_LIBS) \
     $(GLIB_LIBS) \
     $(GOA_LIBS) \
