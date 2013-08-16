@@ -117,6 +117,8 @@ miner_refresh_db_ready_cb (GObject *source,
     {
       g_dbus_method_invocation_return_value (invocation, NULL);
     }
+
+  g_object_unref (invocation);
 }
 
 static void
@@ -132,9 +134,7 @@ handle_refresh_db (GDBusMethodInvocation *invocation)
   cancellable = g_cancellable_new ();
 
   gom_miner_refresh_db_async (miner, cancellable,
-                              miner_refresh_db_ready_cb, invocation);
-
-  g_object_unref (miner);
+                              miner_refresh_db_ready_cb, g_object_ref (invocation));
 }
 
 static void
@@ -148,7 +148,7 @@ handle_method_call (GDBusConnection       *connection,
                     gpointer               user_data)
 {
   if (g_strcmp0 (method_name, "RefreshDB") == 0)
-    handle_refresh_db (g_object_ref (invocation));
+    handle_refresh_db (invocation);
   else
     g_assert_not_reached ();
 }
