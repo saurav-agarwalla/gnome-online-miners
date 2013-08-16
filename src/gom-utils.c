@@ -51,22 +51,6 @@ gom_filename_get_extension_offset (const char *filename)
 	return end;
 }
 
-const char *
-gom_filename_to_mime_type (const gchar *filename_with_extension)
-{
-  const gchar *extension;
-  const gchar *type = NULL;
-
-  g_return_val_if_fail (filename_with_extension != NULL, NULL);
-
-  extension = gom_filename_get_extension_offset (filename_with_extension);
-
-  if (g_strcmp0 (extension, ".pdf") == 0)
-    type = "application/pdf";
-
-  return type;
-}
-
 const gchar *
 gom_filename_to_rdf_type (const gchar *filename_with_extension)
 {

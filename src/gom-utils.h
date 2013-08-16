@@ -28,8 +28,6 @@
 
 G_BEGIN_DECLS
 
-const gchar *gom_filename_to_mime_type (const gchar *filename_with_extension);
-
 const gchar *gom_filename_to_rdf_type (const gchar *filename_with_extension);
 
 gchar *gom_iso8601_from_timestamp (gint64 timestamp);

@@ -107,7 +107,8 @@ account_miner_job_process_entry (GomAccountMinerJob *job,
   if (ZPJ_IS_SKYDRIVE_FILE (entry))
     {
       gchar *parent_resource_urn, *parent_identifier;
-      const gchar *parent_id, *mime;
+      gchar *mime;
+      const gchar *parent_id;
 
       parent_id = zpj_skydrive_entry_get_parent_id (entry);
       parent_identifier = g_strconcat ("gd:collection:windows-live:skydrive:", parent_id, NULL);
@@ -131,7 +132,7 @@ account_miner_job_process_entry (GomAccountMinerJob *job,
       if (*error != NULL)
         goto out;
 
-      mime = gom_filename_to_mime_type (name);
+      mime = g_content_type_guess (name, NULL, 0, NULL);
       if (mime != NULL)
         {
           gom_tracker_sparql_connection_insert_or_replace_triple
@@ -139,6 +140,7 @@ account_miner_job_process_entry (GomAccountMinerJob *job,
              job->cancellable, error,
              job->datasource_urn, resource,
              "nie:mimeType", mime);
+          g_free (mime);
 
           if (*error != NULL)
             goto out;
