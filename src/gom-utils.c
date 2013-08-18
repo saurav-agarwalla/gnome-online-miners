@@ -70,10 +70,12 @@ gom_filename_to_rdf_type (const gchar *filename_with_extension)
       || g_strcmp0 (extension, ".dot") == 0
       || g_strcmp0 (extension, ".dotx") == 0
       || g_strcmp0 (extension, ".epub") == 0
+      || g_strcmp0 (extension, ".odt") == 0
       || g_strcmp0 (extension, ".pdf") == 0)
     type = "nfo:PaginatedTextDocument";
 
-  else if (g_strcmp0 (extension, ".pot") == 0
+  else if (g_strcmp0 (extension, ".odp") == 0
+           || g_strcmp0 (extension, ".pot") == 0
            || g_strcmp0 (extension, ".potm") == 0
            || g_strcmp0 (extension, ".potx") == 0
            || g_strcmp0 (extension, ".pps") == 0
@@ -87,7 +89,8 @@ gom_filename_to_rdf_type (const gchar *filename_with_extension)
   else if (g_strcmp0 (extension, ".txt") == 0)
     type = "nfo:PlainTextDocument";
 
-  else if (g_strcmp0 (extension, ".xls") == 0
+  else if (g_strcmp0 (extension, ".ods") == 0
+           || g_strcmp0 (extension, ".xls") == 0
            || g_strcmp0 (extension, ".xlsb") == 0
            || g_strcmp0 (extension, ".xlsm") == 0
            || g_strcmp0 (extension, ".xlsx") == 0)
