@@ -4,7 +4,7 @@
          xmlns:gnome="http://api.gnome.org/doap-extensions#"
          xmlns="http://usefulinc.com/ns/doap#">
 
-  <name xml:lang="en">GNOME Online Miners</name>
+  <name xml:lang="en">gnome-online-miners</name>
   <shortdesc xml:lang="en">Crawls through your online content</shortdesc>
   <description>GNOME Online Miners provides a set of crawlers that go through
 your online content and index them locally in Tracker. It has miners for
