@@ -1,3 +1,13 @@
+Overview of changes in 3.9.90
+=============================
+
+* Support ownCloud (706158)
+
+* Bugs fixed:
+ 706126 miner-main: Fix and simplify reference counting
+ 706157 utils: Replace gom_filename_to_mime_type with g_content_type_guess
+
+
 Overview of changes in 3.9.5
 ============================
 
