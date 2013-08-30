@@ -50,6 +50,8 @@ typedef struct {
   FlickrEntry *parent_entry;
   GMainLoop *loop;
   GomAccountMinerJob *job;
+  GrlSource *source;
+  const gchar *source_id;
 } SyncData;
 
 static void account_miner_job_browse_container (GomAccountMinerJob *job, FlickrEntry *entry);
@@ -437,6 +439,23 @@ query_flickr (GomAccountMinerJob *job,
     }
 }
 
+static void
+source_added_cb (GrlRegistry *registry, GrlSource *source, gpointer user_data)
+{
+  SyncData *data = (SyncData *) user_data;
+  gchar *source_id;
+
+  g_object_get (source, "source-id", &source_id, NULL);
+  if (g_strcmp0 (source_id, data->source_id) != 0)
+    goto out;
+
+  data->source = g_object_ref (source);
+  g_main_loop_quit (data->loop);
+
+ out:
+  g_free (source_id);
+}
+
 static GObject *
 create_service (GomMiner *self,
                 GoaObject *object)
@@ -456,12 +475,29 @@ create_service (GomMiner *self,
 
   g_debug ("Looking for source %s", source_id);
   source = grl_registry_lookup_source (registry, source_id);
-  g_free (source_id);
   if (source == NULL)
-    return NULL;
+    {
+      GMainContext *context;
+      SyncData data;
 
-  /* freeing job calls unref upon this object */
-  g_object_ref (source);
+      context = g_main_context_get_thread_default ();
+      data.loop = g_main_loop_new (context, FALSE);
+      data.source_id = source_id;
+
+      g_signal_connect (registry, "source-added", G_CALLBACK (source_added_cb), &data);
+      g_main_loop_run (data.loop);
+      g_main_loop_unref (data.loop);
+
+      /* we steal the ref from data */
+      source = data.source;
+    }
+  else
+    {
+      /* freeing job calls unref upon this object */
+      g_object_ref (source);
+    }
+
+  g_free (source_id);
 
   return G_OBJECT (source);
 }
