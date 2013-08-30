@@ -368,7 +368,7 @@ query_owncloud (GomAccountMinerJob *job,
       context = g_main_context_get_thread_default ();
       data.loop = g_main_loop_new (context, FALSE);
 
-      g_signal_connect_object (priv->monitor, "volume-added", G_CALLBACK (volume_added_cb), &data, 0);
+      g_signal_connect (priv->monitor, "volume-added", G_CALLBACK (volume_added_cb), &data);
       g_main_loop_run (data.loop);
       g_main_loop_unref (data.loop);
     }
