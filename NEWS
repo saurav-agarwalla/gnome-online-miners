@@ -1,3 +1,11 @@
+Overview of changes in 3.9.91
+=============================
+
+* Bugs fixed:
+ 707142 owncloud: Fix typo
+ 707143 flickr: Wait for the GOA source to be added
+
+
 Overview of changes in 3.9.90
 =============================
 
