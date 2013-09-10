@@ -1,6 +1,6 @@
 /*
  * GNOME Online Miners - crawls through your online content
- * Copyright (c) 2011 Red Hat, Inc.
+ * Copyright (c) 2011, 2012, 2013 Red Hat, Inc.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
