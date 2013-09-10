@@ -41,7 +41,7 @@ account_miner_job_process_entry (GomAccountMinerJob *job,
 {
   GDataEntry *entry = GDATA_ENTRY (doc_entry);
   gchar *resource = NULL;
-  gchar *date, *resource_url, *identifier;
+  gchar *date, *identifier;
   const gchar *class = NULL;
   const gchar *mimetype_override = NULL;
   gboolean mtime_changed, resource_exists;
@@ -66,18 +66,9 @@ account_miner_job_process_entry (GomAccountMinerJob *job,
 
       link = gdata_entry_look_up_link (entry, GDATA_LINK_SELF);
       identifier = g_strdup_printf ("gd:collection:%s", gdata_link_get_uri (link));
-      resource_url = NULL;
     }
   else
-    {
-      gchar *entry_path;
-
-      identifier = g_strdup (gdata_entry_get_id (entry));
-      entry_path = gdata_documents_entry_get_path (doc_entry);
-      resource_url = g_strdup_printf ("google:docs:%s", entry_path);
-
-      g_free (entry_path);
-    }
+    identifier = g_strdup (gdata_entry_get_id (entry));
 
   /* remove from the list of the previous resources */
   g_hash_table_remove (job->previous_resources, identifier);
@@ -303,7 +294,6 @@ account_miner_job_process_entry (GomAccountMinerJob *job,
 
  out:
   g_clear_object (&access_rules);
-  g_free (resource_url);
   g_free (resource);
   g_free (identifier);
 
