@@ -1,6 +1,9 @@
 Overview of changes in 3.9.92
 =============================
 
+* Bugs fixed:
+ 694003 gdata: Empty collections
+
 
 Overview of changes in 3.9.91
 =============================
