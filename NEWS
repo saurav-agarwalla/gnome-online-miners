@@ -1,3 +1,10 @@
+Overview of changes in 3.10.2
+=============================
+
+* Bugs fixed:
+ 715026 owncloud: Regular files are missing
+
+
 Overview of changes in 3.10.0
 =============================
 
