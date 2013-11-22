@@ -43,9 +43,6 @@ struct _GomOwncloudMinerPrivate {
   G_FILE_ATTRIBUTE_STANDARD_TYPE "," \
   G_FILE_ATTRIBUTE_TIME_MODIFIED
 
-/* GVfs marks regular files on remote shares as UNKNOWN */
-#define FILE_TYPE_NETWORK G_FILE_TYPE_UNKNOWN
-
 typedef struct {
   GError **error;
   GMainLoop *loop;
@@ -87,7 +84,7 @@ account_miner_job_process_file (GomAccountMinerJob *job,
   g_hash_table_remove (job->previous_resources, identifier);
 
   name = g_file_info_get_name (info);
-  if (type == FILE_TYPE_NETWORK)
+  if (type == G_FILE_TYPE_REGULAR)
     class = gom_filename_to_rdf_type (name);
   else
     class = "nfo:DataContainer";
@@ -138,7 +135,7 @@ account_miner_job_process_file (GomAccountMinerJob *job,
   if (*error != NULL)
     goto out;
 
-  if (type == FILE_TYPE_NETWORK)
+  if (type == G_FILE_TYPE_REGULAR)
     {
       const gchar *mime;
       const gchar *parent_id;
@@ -243,7 +240,7 @@ account_miner_job_traverse_dir (GomAccountMinerJob *job,
       name = g_file_info_get_name (info);
       child = g_file_get_child (dir, name);
 
-      if (type == FILE_TYPE_NETWORK || type == G_FILE_TYPE_DIRECTORY)
+      if (type == G_FILE_TYPE_REGULAR || type == G_FILE_TYPE_DIRECTORY)
         {
           account_miner_job_process_file (job, child, info, is_root ? NULL : dir, &local_error);
           if (local_error != NULL)
