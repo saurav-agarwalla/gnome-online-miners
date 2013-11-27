@@ -31,10 +31,37 @@ libgom_1_0_la_LDFLAGS = \
     $(NULL)
 
 libexec_PROGRAMS = \
+    gom-facebook-miner \
     gom-flickr-miner \
     gom-gdata-miner \
     gom-owncloud-miner \
     gom-zpj-miner \
+    $(NULL)
+
+gom_facebook_miner_SOURCES = \
+    gom-facebook-miner-main.c \
+    gom-facebook-miner.c \
+    gom-facebook-miner.h \
+    $(NULL)
+
+gom_facebook_miner_CPPFLAGS = \
+    -DG_LOG_DOMAIN=\"Gom\" \
+    -DG_DISABLE_DEPRECATED \
+    -I$(top_srcdir)/src \
+    $(GFBGRAPH_CFLAGS) \
+    $(GIO_CFLAGS) \
+    $(GLIB_CFLAGS) \
+    $(GOA_CFLAGS) \
+    $(TRACKER_CFLAGS) \
+    $(NULL)
+
+gom_facebook_miner_LDADD = \
+    libgom-1.0.la  \
+    $(GFBGRAPH_LIBS) \
+    $(GIO_LIBS) \
+    $(GLIB_LIBS) \
+    $(GOA_LIBS) \
+    $(TRACKER_LIBS) \
     $(NULL)
 
 gom_flickr_miner_SOURCES = \
