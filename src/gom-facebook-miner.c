@@ -40,14 +40,16 @@ account_miner_job_process_photo (GomAccountMinerJob *job,
                                  const gchar *creator,
                                  GError **error)
 {
+  GTimeVal new_mtime;
   const gchar *photo_id;
   const gchar *photo_name;
   const gchar *photo_created_time;
+  const gchar *photo_updated_time;
   const gchar *photo_link;
   gchar *identifier;
   const gchar *class = "nmm:Photo";
   gchar *resource = NULL;
-  gboolean resource_exists;
+  gboolean resource_exists, mtime_changed;
   gchar *contact_resource;
 
   photo_id = gfbgraph_node_get_id (GFBGRAPH_NODE (photo));
@@ -78,10 +80,26 @@ account_miner_job_process_photo (GomAccountMinerJob *job,
   if (*error != NULL)
     goto out;
 
-  /* TODO: Check updated time to avoid updating the photo if has not
-   * been modified since our last run
-   */
+  photo_updated_time = gfbgraph_node_get_updated_time (GFBGRAPH_NODE (photo));
+  if (!g_time_val_from_iso8601 (photo_updated_time, &new_mtime))
+    g_warning ("Can't convert updated time from ISO 8601 (%s) to a GTimeVal struct",
+               photo_updated_time);
+  else
+    {
+      mtime_changed = gom_tracker_update_mtime (job->connection, new_mtime.tv_sec,
+                                                resource_exists, identifier, resource,
+                                                job->cancellable, error);
+      if (*error != NULL)
+        goto out;
 
+      /* avoid updating the DB if the entry already exists and has not
+       * been modified since our last run.
+       */
+      if (!mtime_changed)
+        goto out;
+  }
+
+  /* the resource changed - just set all the properties again */
   gom_tracker_sparql_connection_insert_or_replace_triple
     (job->connection,
      job->cancellable, error,
