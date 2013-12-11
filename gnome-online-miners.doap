@@ -8,7 +8,7 @@
   <shortdesc xml:lang="en">Crawls through your online content</shortdesc>
   <description>GNOME Online Miners provides a set of crawlers that go through
 your online content and index them locally in Tracker. It has miners for
-Flickr, Google, ownCloud and SkyDrive.</description>
+Facebook, Flickr, Google, ownCloud and SkyDrive.</description>
   <download-page rdf:resource="http://download.gnome.org/sources/gnome-online-miners" />
   <bug-database rdf:resource="https://bugzilla.gnome.org/enter_bug.cgi?product=gnome-online-miners" />
 
