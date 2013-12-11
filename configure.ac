@@ -2,7 +2,7 @@ AC_INIT([GNOME Online Miners],
         [3.11.3],
         [https://bugzilla.gnome.org/enter_bug.cgi?product=gnome-online-miners],
         [gnome-online-miners],
-        [])
+        [https://wiki.gnome.org/Projects/GnomeOnlineMiners])
 AC_PREREQ(2.63)
 
 AC_CONFIG_AUX_DIR([config])
