@@ -1,6 +1,11 @@
 Overview of changes in 3.11.3
 =============================
 
+* Support Facebook (701499)
+
+* Bugs fixed:
+ 715086 build: support tracker 0.18
+
 
 Overview of changes in 3.11.2
 =============================
