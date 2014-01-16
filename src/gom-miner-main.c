@@ -25,8 +25,13 @@
 #error "gom-miner-main.c is meant to be included, not compiled standalone"
 #endif
 
+#include <unistd.h>
+
 #include <glib-unix.h>
 #include <glib.h>
+
+#include "tracker-ioprio.h"
+#include "tracker-sched.h"
 
 #define AUTOQUIT_TIMEOUT 5 /* seconds */
 
@@ -238,6 +243,18 @@ int
 main (int argc,
       char **argv)
 {
+  tracker_sched_idle ();
+  tracker_ioprio_init ();
+
+  errno = 0;
+  if (nice (19) == -1 && errno != 0)
+    {
+      const gchar *str;
+
+      str = g_strerror (errno);
+      g_warning ("Couldn't set nice value to 19, %s", (str != NULL) ? str : "no error given");
+    }
+
   ensure_autoquit_on ();
   loop = g_main_loop_new (NULL, FALSE);
 

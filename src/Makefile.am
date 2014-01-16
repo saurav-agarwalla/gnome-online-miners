@@ -7,6 +7,10 @@ libgom_1_0_la_SOURCES = \
     gom-tracker.h \
     gom-utils.c \
     gom-utils.h \
+    tracker-ioprio.c \
+    tracker-ioprio.h \
+    tracker-sched.c \
+    tracker-sched.h \
     $(NULL)
 
 libgom_1_0_la_CPPFLAGS = \
