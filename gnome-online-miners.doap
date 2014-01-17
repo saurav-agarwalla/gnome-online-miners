@@ -5,12 +5,30 @@
          xmlns="http://usefulinc.com/ns/doap#">
 
   <name xml:lang="en">GNOME Online Miners</name>
-  <shortdesc xml:lang="en">Crawls through your online content</shortdesc>
-  <description>GNOME Online Miners provides a set of crawlers that go through
-your online content and index them locally in Tracker. It has miners for
-Facebook, Flickr, Google, ownCloud and SkyDrive.</description>
+  <shortname xml:lang="en">gnome-online-miners</shortname>
+
+  <shortdesc xml:lang="en">
+    Crawls through your online content
+  </shortdesc>
+  <description xml:lang="en">
+    GNOME Online Miners provides a set of crawlers that go through your
+    online content and index them locally in Tracker. It has miners for
+    Facebook, Flickr, Google, ownCloud and SkyDrive.
+  </description>
+
+  <homepage rdf:resource="https://wiki.gnome.org/Projects/GnomeOnlineMiners" />
+  <license rdf:resource="http://usefulinc.com/doap/licenses/gpl" />
   <download-page rdf:resource="http://download.gnome.org/sources/gnome-online-miners" />
   <bug-database rdf:resource="https://bugzilla.gnome.org/enter_bug.cgi?product=gnome-online-miners" />
+
+  <programming-language>C</programming-language>
+
+  <repository>
+    <GitRepository>
+      <location rdf:resource="git://git.gnome.org/gnome-online-miners" />
+      <browse rdf:resource="https://git.gnome.org/browse/gnome-online-miners/" />
+    </GitRepository>
+  </repository>
 
   <maintainer>
     <foaf:Person>
