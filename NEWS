@@ -1,3 +1,10 @@
+Overview of changes in 3.10.3
+=============================
+
+* Bugs fixed:
+ 722278 miner-main: Lower the CPU and disk I/O scheduling and priority
+
+
 Overview of changes in 3.10.2
 =============================
 
