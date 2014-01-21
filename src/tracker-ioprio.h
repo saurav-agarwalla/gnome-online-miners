@@ -21,6 +21,8 @@
 #ifndef __LIBTRACKER_COMMON_IOPRIO_H__
 #define __LIBTRACKER_COMMON_IOPRIO_H__
 
+#include <glib.h>
+
 G_BEGIN_DECLS
 
 void tracker_ioprio_init (void);

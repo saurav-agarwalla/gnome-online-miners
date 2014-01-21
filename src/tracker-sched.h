@@ -20,6 +20,8 @@
 #ifndef __LIBTRACKER_COMMON_SCHED_H__
 #define __LIBTRACKER_COMMON_SCHED_H__
 
+#include <glib.h>
+
 G_BEGIN_DECLS
 
 gboolean tracker_sched_idle (void);
