@@ -1,3 +1,10 @@
+Overview of changes in 3.11.5
+=============================
+
+* Bugs fixed:
+ 722525 Fix build failure on non-Linux systems
+
+
 Overview of changes in 3.11.4
 =============================
 
