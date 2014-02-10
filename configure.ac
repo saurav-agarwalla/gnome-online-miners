@@ -42,7 +42,7 @@ PKG_CHECK_MODULES(GOA, [goa-1.0 >= $GOA_MIN_VERSION])
 AC_DEFINE([GOA_API_IS_SUBJECT_TO_CHANGE], [], [We are aware that GOA's API can change])
 
 PKG_CHECK_MODULES(GRILO, [grilo-0.2 >= $GRILO_MIN_VERSION])
-PKG_CHECK_MODULES(TRACKER, [tracker-miner-0.18 tracker-sparql-0.18])
+PKG_CHECK_MODULES(TRACKER, [tracker-miner-1.0 tracker-sparql-1.0])
 PKG_CHECK_MODULES(ZAPOJIT, [zapojit-0.0 >= $ZAPOJIT_MIN_VERSION])
 
 AC_CONFIG_FILES([
