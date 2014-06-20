@@ -27,7 +27,6 @@
 #define MINER_NAME "ZPJ"
 #define MINER_TYPE GOM_TYPE_ZPJ_MINER
 #define MINER_BUS_NAME "org.gnome.OnlineMiners.Zpj"
-#define MINER_OBJECT_PATH "/org/gnome/OnlineMiners/Zpj"
 
 #include "gom-zpj-miner.h"
 #include "gom-miner-main.c"

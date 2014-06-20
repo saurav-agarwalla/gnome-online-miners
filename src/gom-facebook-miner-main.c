@@ -27,7 +27,6 @@
 #define MINER_NAME "FACEBOOK"
 #define MINER_TYPE GOM_TYPE_FACEBOOK_MINER
 #define MINER_BUS_NAME "org.gnome.OnlineMiners.Facebook"
-#define MINER_OBJECT_PATH "/org/gnome/OnlineMiners/Facebook"
 
 #include "gom-facebook-miner.h"
 #include "gom-miner-main.c"

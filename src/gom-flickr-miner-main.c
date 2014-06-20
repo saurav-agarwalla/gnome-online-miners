@@ -26,7 +26,6 @@
 #define MINER_NAME "FLICKR"
 #define MINER_TYPE GOM_TYPE_FLICKR_MINER
 #define MINER_BUS_NAME "org.gnome.OnlineMiners.Flickr"
-#define MINER_OBJECT_PATH "/org/gnome/OnlineMiners/Flickr"
 
 #include "gom-flickr-miner.h"
 #include "gom-miner-main.c"

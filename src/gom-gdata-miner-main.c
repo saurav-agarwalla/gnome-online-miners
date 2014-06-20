@@ -27,7 +27,6 @@
 #define MINER_NAME "GDATA"
 #define MINER_TYPE GOM_TYPE_GDATA_MINER
 #define MINER_BUS_NAME "org.gnome.OnlineMiners.GData"
-#define MINER_OBJECT_PATH "/org/gnome/OnlineMiners/GData"
 
 #include "gom-gdata-miner.h"
 #include "gom-miner-main.c"

@@ -27,7 +27,6 @@
 #define MINER_NAME "OWNCLOUD"
 #define MINER_TYPE GOM_TYPE_OWNCLOUD_MINER
 #define MINER_BUS_NAME "org.gnome.OnlineMiners.Owncloud"
-#define MINER_OBJECT_PATH "/org/gnome/OnlineMiners/Owncloud"
 
 #include "gom-owncloud-miner.h"
 #include "gom-miner-main.c"
