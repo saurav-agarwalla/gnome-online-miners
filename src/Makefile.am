@@ -1,6 +1,17 @@
 pkglib_LTLIBRARIES = libgom-1.0.la
 
+libgom_1_0_la_built_sources = \
+    gom-dbus.c \
+    gom-dbus.h \
+    $(NULL)
+
+nodist_libgom_1_0_la_SOURCES = \
+    $(libgom_1_0_la_built_sources)
+    $(NULL)
+
 libgom_1_0_la_SOURCES = \
+    gom-application.c \
+    gom-application.h \
     gom-miner.c \
     gom-miner.h \
     gom-tracker.c \
@@ -170,8 +181,25 @@ gom_zpj_miner_LDADD = \
     $(ZAPOJIT_LIBS) \
     $(NULL)
 
+BUILT_SOURCES = \
+    $(libgom_1_0_la_built_sources) \
+    $(NULL)
+
+CLEANFILES = \
+    $(BUILT_SOURCES) \
+    $(NULL)
+
 EXTRA_DIST = \
+    gom-dbus.xml \
     gom-miner-main.c \
     $(NULL)
+
+gom-dbus.h gom-dbus.c: gom-dbus.xml
+	$(AM_V_GEN)gdbus-codegen \
+		--c-namespace Gom \
+		--generate-c-code gom-dbus \
+		--interface-prefix org.gnome.OnlineMiners. \
+		--annotate "org.gnome.OnlineMiners.Miner" org.gtk.GDBus.C.Name DBus \
+		$<
 
 -include $(top_srcdir)/git.mk
