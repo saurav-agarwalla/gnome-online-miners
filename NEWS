@@ -1,12 +1,18 @@
-Overview of changes in 3.13.1
+Overview of changes in 3.13.3
 =============================
+
+* Bugs fixed:
+ 727331 build: Bump minimum required GOA version to 3.7.3
+ 728878 src: Pass the content type to RefreshDB
+ 729398 build: Remove GNOME_COMMON_INIT
+ 731976 Use a gdbus-codegen-ed GDBusInterfaceSkeleton and GApplication
 
 
 Overview of changes in 3.11.90
 ==============================
 
 * Bugs fixed:
-  build: support tracker 1.0
+ build: support tracker 1.0
 
 
 Overview of changes in 3.11.5
