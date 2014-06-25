@@ -321,6 +321,7 @@ static void
 account_miner_job_browse_container (GomAccountMinerJob *job, FlickrEntry *entry)
 {
   GMainContext *context;
+  GrlSource *source;
   GrlOperationOptions *opts;
   const GList *keys;
   SyncData data;
@@ -332,10 +333,12 @@ account_miner_job_browse_container (GomAccountMinerJob *job, FlickrEntry *entry)
   g_main_context_push_thread_default (context);
   data.loop = g_main_loop_new (context, FALSE);
 
-  keys = grl_source_supported_keys (GRL_SOURCE (data.job->service));
-  opts = get_grl_options (GRL_SOURCE (data.job->service));
+  source = GRL_SOURCE (g_hash_table_lookup (data.job->services, "photos"));
 
-  grl_source_browse (GRL_SOURCE (job->service),
+  keys = grl_source_supported_keys (source);
+  opts = get_grl_options (source);
+
+  grl_source_browse (source,
                      entry->media,
                      keys,
                      opts,
@@ -395,15 +398,17 @@ query_flickr (GomAccountMinerJob *job,
   const GList *keys;
   GMainContext *context;
   GrlOperationOptions *opts;
+  GrlSource *source;
   SyncData data;
 
-  if (job->service == NULL)
+  source = GRL_SOURCE (g_hash_table_lookup (job->services, "photos"));
+  if (source == NULL)
   {
     /* FIXME: use proper #defines and enumerated types */
     g_set_error (error,
                  g_quark_from_static_string ("gom-error"),
                  0,
-                 "Can not query without a source");
+                 "Can not query without a service");
     return;
   }
 
@@ -417,9 +422,9 @@ query_flickr (GomAccountMinerJob *job,
   g_main_context_push_thread_default (context);
   data.loop = g_main_loop_new (context, FALSE);
 
-  keys = grl_source_supported_keys (GRL_SOURCE(job->service));
-  opts = get_grl_options (GRL_SOURCE(job->service));
-  grl_source_search (GRL_SOURCE (job->service), NULL, keys, opts, source_search_cb, &data);
+  keys = grl_source_supported_keys (source);
+  opts = get_grl_options (source);
+  grl_source_search (source, NULL, keys, opts, source_search_cb, &data);
   g_main_loop_run (data.loop);
 
   g_object_unref (opts);
@@ -456,50 +461,58 @@ source_added_cb (GrlRegistry *registry, GrlSource *source, gpointer user_data)
   g_free (source_id);
 }
 
-static GObject *
-create_service (GomMiner *self,
-                GoaObject *object)
+static GHashTable *
+create_services (GomMiner *self,
+                 GoaObject *object)
 {
+  GHashTable *services;
   GoaAccount *acc;
   GrlRegistry *registry;
   GrlSource *source = NULL;
   gchar *source_id = NULL;
 
+  services = g_hash_table_new_full (g_str_hash, g_str_equal,
+                                    NULL, (GDestroyNotify) g_object_unref);
+
   acc = goa_object_peek_account (object);
   if (acc == NULL)
-    return NULL;
+    goto out;
 
-  source_id = g_strdup_printf ("grl-flickr-%s", goa_account_get_id (acc));
-
-  registry = grl_registry_get_default ();
-
-  g_debug ("Looking for source %s", source_id);
-  source = grl_registry_lookup_source (registry, source_id);
-  if (source == NULL)
+  if (gom_miner_supports_type (self, "photos"))
     {
-      GMainContext *context;
-      SyncData data;
+      source_id = g_strdup_printf ("grl-flickr-%s", goa_account_get_id (acc));
 
-      context = g_main_context_get_thread_default ();
-      data.loop = g_main_loop_new (context, FALSE);
-      data.source_id = source_id;
+      registry = grl_registry_get_default ();
 
-      g_signal_connect (registry, "source-added", G_CALLBACK (source_added_cb), &data);
-      g_main_loop_run (data.loop);
-      g_main_loop_unref (data.loop);
+      g_debug ("Looking for source %s", source_id);
+      source = grl_registry_lookup_source (registry, source_id);
+      if (source == NULL)
+        {
+          GMainContext *context;
+          SyncData data;
 
-      /* we steal the ref from data */
-      source = data.source;
+          context = g_main_context_get_thread_default ();
+          data.loop = g_main_loop_new (context, FALSE);
+          data.source_id = source_id;
+
+          g_signal_connect (registry, "source-added", G_CALLBACK (source_added_cb), &data);
+          g_main_loop_run (data.loop);
+          g_main_loop_unref (data.loop);
+
+          /* we steal the ref from data */
+          source = data.source;
+        }
+      else
+        {
+          /* freeing job calls unref upon this object */
+          g_object_ref (source);
+        }
+      g_free (source_id);
+      g_hash_table_insert (services, "photos", source);
     }
-  else
-    {
-      /* freeing job calls unref upon this object */
-      g_object_ref (source);
-    }
 
-  g_free (source_id);
-
-  return G_OBJECT (source);
+ out:
+  return services;
 }
 
 static void
@@ -533,7 +546,7 @@ gom_flickr_miner_class_init (GomFlickrMinerClass *klass)
   miner_class->miner_identifier = MINER_IDENTIFIER;
   miner_class->version = 1;
 
-  miner_class->create_service = create_service;
+  miner_class->create_services = create_services;
   miner_class->query = query_flickr;
 
   grl_init (NULL, NULL);

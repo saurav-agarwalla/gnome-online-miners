@@ -210,12 +210,25 @@ account_miner_job_traverse_folder (GomAccountMinerJob *job,
                                    const gchar *folder_id,
                                    GError **error)
 {
-  GList *entries, *l;
+  GList *entries = NULL, *l;
+  ZpjSkydrive *skydrive;
 
-  entries = zpj_skydrive_list_folder_id (ZPJ_SKYDRIVE (job->service),
+  skydrive = ZPJ_SKYDRIVE (g_hash_table_lookup (job->services, "documents"));
+  if (skydrive == NULL)
+    {
+      /* FIXME: use proper #defines and enumerated types */
+      g_set_error (error,
+                   g_quark_from_static_string ("gom-error"),
+                   0,
+                   "Can not query without a service");
+      goto out;
+    }
+
+  entries = zpj_skydrive_list_folder_id (skydrive,
                                          folder_id,
                                          job->cancellable,
                                          error);
+
   if (*error != NULL)
     goto out;
 
@@ -258,20 +271,28 @@ query_zpj (GomAccountMinerJob *job,
                                      error);
 }
 
-static GObject *
-create_service (GomMiner *self,
-                GoaObject *object)
+static GHashTable *
+create_services (GomMiner *self,
+                 GoaObject *object)
 {
+  GHashTable *services;
   ZpjGoaAuthorizer *authorizer;
   ZpjSkydrive *service;
 
-  authorizer = zpj_goa_authorizer_new (object);
-  service = zpj_skydrive_new (ZPJ_AUTHORIZER (authorizer));
+  services = g_hash_table_new_full (g_str_hash, g_str_equal,
+                                    NULL, (GDestroyNotify) g_object_unref);
 
-  /* the service takes ownership of the authorizer */
-  g_object_unref (authorizer);
+  if (gom_miner_supports_type (self, "documents"))
+    {
+      authorizer = zpj_goa_authorizer_new (object);
+      service = zpj_skydrive_new (ZPJ_AUTHORIZER (authorizer));
 
-  return G_OBJECT (service);
+      /* the service takes ownership of the authorizer */
+      g_object_unref (authorizer);
+      g_hash_table_insert (services, "documents", service);
+    }
+
+  return services;
 }
 
 static void
@@ -289,6 +310,6 @@ gom_zpj_miner_class_init (GomZpjMinerClass *klass)
   miner_class->miner_identifier = MINER_IDENTIFIER;
   miner_class->version = 1;
 
-  miner_class->create_service = create_service;
+  miner_class->create_services = create_services;
   miner_class->query = query_zpj;
 }

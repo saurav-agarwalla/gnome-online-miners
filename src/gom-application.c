@@ -35,6 +35,7 @@ struct _GomApplication
   GCancellable *cancellable;
   GomDBus *skeleton;
   GomMiner *miner;
+  GQueue *queue;
   GType miner_type;
   gboolean refreshing;
 };
@@ -51,6 +52,35 @@ enum
 };
 
 G_DEFINE_TYPE (GomApplication, gom_application, G_TYPE_APPLICATION);
+
+static void gom_application_refresh_db_cb (GObject *source, GAsyncResult *res, gpointer user_data);
+
+static void
+gom_application_process_queue (GomApplication *self)
+{
+  GDBusMethodInvocation *invocation = NULL;
+  const gchar **index_types;
+
+  if (self->refreshing)
+    goto out;
+
+  if (g_queue_is_empty (self->queue))
+    goto out;
+
+  invocation = G_DBUS_METHOD_INVOCATION (g_queue_pop_head (self->queue));
+  index_types = g_object_get_data (G_OBJECT (invocation), "index-types");
+  gom_miner_set_index_types (self->miner, index_types);
+
+  self->refreshing = TRUE;
+  g_application_hold (G_APPLICATION (self));
+  gom_miner_refresh_db_async (self->miner,
+                              self->cancellable,
+                              gom_application_refresh_db_cb,
+                              g_object_ref (invocation));
+
+ out:
+  g_clear_object (&invocation);
+}
 
 static void
 gom_application_refresh_db_cb (GObject *source,
@@ -77,23 +107,20 @@ gom_application_refresh_db_cb (GObject *source,
 
  out:
   g_object_unref (invocation);
+  gom_application_process_queue (self);
 }
 
 static gboolean
 gom_application_refresh_db (GomApplication *self,
-                            GDBusMethodInvocation *invocation)
+                            GDBusMethodInvocation *invocation,
+                            const gchar *const *arg_index_types)
 {
-  if (self->refreshing)
-    goto out;
+  gchar **index_types;
 
-  g_application_hold (G_APPLICATION (self));
-
-  gom_miner_refresh_db_async (self->miner,
-                              self->cancellable,
-                              gom_application_refresh_db_cb,
-                              g_object_ref (invocation));
-
- out:
+  index_types = g_strdupv ((gchar **) arg_index_types);
+  g_object_set_data_full (G_OBJECT (invocation), "index-types", index_types, (GDestroyNotify) g_strfreev);
+  g_queue_push_tail (self->queue, g_object_ref (invocation));
+  gom_application_process_queue (self);
   return TRUE;
 }
 
@@ -173,6 +200,12 @@ gom_application_dispose (GObject *object)
   g_clear_object (&self->miner);
   g_clear_object (&self->skeleton);
 
+  if (self->queue != NULL)
+    {
+      g_queue_free_full (self->queue, g_object_unref);
+      self->queue = NULL;
+    }
+
   G_OBJECT_CLASS (gom_application_parent_class)->dispose (object);
 }
 
@@ -203,6 +236,8 @@ gom_application_init (GomApplication *self)
 
   self->skeleton = gom_dbus_skeleton_new ();
   g_signal_connect_swapped (self->skeleton, "handle-refresh-db", G_CALLBACK (gom_application_refresh_db), self);
+
+  self->queue = g_queue_new ();
 }
 
 static void

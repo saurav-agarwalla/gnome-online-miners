@@ -64,7 +64,7 @@ typedef struct {
   gulong miner_cancellable_id;
 
   GoaAccount *account;
-  GObject *service;
+  GHashTable *services;
   GSimpleAsyncResult *async_result;
   GCancellable *cancellable;
 
@@ -88,8 +88,8 @@ struct _GomMinerClass
   char *miner_identifier;
   gint  version;
 
-  GObject * (*create_service) (GomMiner *self,
-                               GoaObject *object);
+  GHashTable * (*create_services) (GomMiner *self,
+                                   GoaObject *object);
 
   void (*query) (GomAccountMinerJob *job,
                  GError **error);
@@ -107,6 +107,12 @@ void gom_miner_refresh_db_async (GomMiner *self,
 gboolean gom_miner_refresh_db_finish (GomMiner *self,
                                       GAsyncResult *res,
                                       GError **error);
+
+void gom_miner_set_index_types (GomMiner *self, const gchar **index_types);
+
+const gchar ** gom_miner_get_index_types (GomMiner *self);
+
+gboolean gom_miner_supports_type (GomMiner *self, gchar *type);
 
 G_END_DECLS
 

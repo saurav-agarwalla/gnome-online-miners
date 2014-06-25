@@ -42,6 +42,7 @@ struct _GomMinerPrivate {
   GList *pending_jobs;
 
   gchar *display_name;
+  gchar **index_types;
 };
 
 static void
@@ -51,7 +52,7 @@ gom_account_miner_job_free (GomAccountMinerJob *job)
     g_cancellable_disconnect (job->miner->priv->cancellable,
                               job->miner_cancellable_id);
 
-  g_clear_object (&job->service);
+  g_hash_table_unref (job->services);
   g_clear_object (&job->miner);
   g_clear_object (&job->account);
   g_clear_object (&job->async_result);
@@ -82,6 +83,7 @@ gom_miner_dispose (GObject *object)
   g_clear_object (&self->priv->result);
 
   g_free (self->priv->display_name);
+  g_strfreev (self->priv->index_types);
   g_clear_error (&self->priv->client_error);
 
   G_OBJECT_CLASS (gom_miner_parent_class)->dispose (object);
@@ -379,7 +381,7 @@ gom_account_miner_job_new (GomMiner *self,
                                G_CALLBACK (miner_cancellable_cancelled_cb),
                                retval, NULL);
 
-  retval->service = miner_class->create_service (self, object);
+  retval->services = miner_class->create_services (self, object);
   retval->datasource_urn = g_strdup_printf ("gd:goa-account:%s",
                                             goa_account_get_id (retval->account));
   retval->root_element_urn = g_strdup_printf ("gd:goa-account:%s:root-element",
@@ -647,6 +649,7 @@ gom_miner_refresh_db_real (GomMiner *self)
   const gchar *provider_type;
   GList *accounts, *content_objects, *acc_objects, *l;
   GomMinerClass *miner_class = GOM_MINER_GET_CLASS (self);
+  gboolean skip_photos, skip_documents;
 
   content_objects = NULL;
   acc_objects = NULL;
@@ -665,10 +668,18 @@ gom_miner_refresh_db_real (GomMiner *self)
         continue;
 
       acc_objects = g_list_append (acc_objects, g_object_ref (object));
+      skip_photos = skip_documents = TRUE;
 
       documents = goa_object_peek_documents (object);
       photos = goa_object_peek_photos (object);
-      if (documents == NULL && photos == NULL)
+
+      if (gom_miner_supports_type (self, "photos") && photos != NULL)
+        skip_photos = FALSE;
+
+      if (gom_miner_supports_type (self, "documents") && documents != NULL)
+        skip_documents = FALSE;
+
+      if (skip_photos && skip_documents)
         continue;
 
       content_objects = g_list_append (content_objects, g_object_ref (object));
@@ -741,4 +752,35 @@ gom_miner_refresh_db_finish (GomMiner *self,
     return FALSE;
 
   return TRUE;
+}
+
+void
+gom_miner_set_index_types (GomMiner *self, const char **index_types)
+{
+  g_strfreev (self->priv->index_types);
+  self->priv->index_types = g_strdupv ((gchar **) index_types);
+}
+
+const gchar **
+gom_miner_get_index_types (GomMiner *self)
+{
+  return (const gchar **) self->priv->index_types;
+}
+
+gboolean
+gom_miner_supports_type (GomMiner *self, gchar *type)
+{
+  gboolean retval = FALSE;
+  guint i;
+
+  for (i = 0; self->priv->index_types[i] != NULL; i++)
+    {
+      if (g_strcmp0 (self->priv->index_types[i], type) == 0)
+        {
+          retval = TRUE;
+          break;
+        }
+    }
+
+  return retval;
 }

@@ -194,7 +194,9 @@ account_miner_job_process_album (GomAccountMinerJob *job,
   gchar *contact_resource;
   GList *l;
   GList *photos = NULL;
+  GFBGraphAuthorizer *authorizer;
 
+  authorizer = GFBGRAPH_AUTHORIZER (g_hash_table_lookup (job->services, "photos"));
   album_id = gfbgraph_node_get_id (GFBGRAPH_NODE (album));
   album_link = gfbgraph_node_get_link (GFBGRAPH_NODE (album));
   album_created_time = gfbgraph_node_get_created_time (GFBGRAPH_NODE (album));
@@ -286,7 +288,7 @@ account_miner_job_process_album (GomAccountMinerJob *job,
   /* Album photos */
   photos = gfbgraph_node_get_connection_nodes (GFBGRAPH_NODE (album),
                                                GFBGRAPH_TYPE_PHOTO,
-                                               GFBGRAPH_AUTHORIZER (job->service),
+                                               authorizer,
                                                error);
   if (*error != NULL)
     goto out;
@@ -323,19 +325,31 @@ static void
 query_facebook (GomAccountMinerJob *job,
                 GError **error)
 {
-  GFBGraphUser *me;
+  GFBGraphAuthorizer *authorizer;
+  GFBGraphUser *me = NULL;
   const gchar *me_name;
   GList *albums = NULL;
   GList *l = NULL;
   GError *local_error = NULL;
 
-  me = gfbgraph_user_get_me (GFBGRAPH_AUTHORIZER (job->service), &local_error);
+  authorizer = GFBGRAPH_AUTHORIZER (g_hash_table_lookup (job->services, "photos"));
+  if (authorizer == NULL)
+    {
+      /* FIXME: use proper #defines and enumerated types */
+      g_set_error (&local_error,
+                   g_quark_from_static_string ("gom-error"),
+                   0,
+                   "Can not query without a service");
+      goto out;
+    }
+
+  me = gfbgraph_user_get_me (authorizer, &local_error);
   if (local_error != NULL)
     goto out;
 
   me_name = gfbgraph_user_get_name (me);
 
-  albums = gfbgraph_user_get_albums (me, GFBGRAPH_AUTHORIZER (job->service), &local_error);
+  albums = gfbgraph_user_get_albums (me, authorizer, &local_error);
   if (local_error != NULL)
     goto out;
 
@@ -362,23 +376,32 @@ query_facebook (GomAccountMinerJob *job,
   g_clear_object (&me);
 }
 
-static GObject *
-create_service (GomMiner *self,
-                GoaObject *object)
+static GHashTable *
+create_services (GomMiner *self,
+                 GoaObject *object)
 {
   GFBGraphGoaAuthorizer *authorizer;
   GError *error = NULL;
+  GHashTable *services;
+
+  services = g_hash_table_new_full (g_str_hash, g_str_equal,
+                                    NULL, (GDestroyNotify) g_object_unref);
 
   authorizer = gfbgraph_goa_authorizer_new (object);
 
-  gfbgraph_authorizer_refresh_authorization (GFBGRAPH_AUTHORIZER (authorizer), NULL, &error);
-  if (error != NULL)
+  if (gom_miner_supports_type (self, "photos"))
     {
-      g_warning ("Error refreshing authorization (%d): %s", error->code, error->message);
-      g_error_free (error);
+      gfbgraph_authorizer_refresh_authorization (GFBGRAPH_AUTHORIZER (authorizer), NULL, &error);
+      if (error != NULL)
+        {
+          g_warning ("Error refreshing authorization (%d): %s", error->code, error->message);
+          g_error_free (error);
+        }
+
+      g_hash_table_insert (services, "photos", authorizer);
     }
 
-  return G_OBJECT (authorizer);
+  return services;
 }
 
 static void
@@ -395,6 +418,6 @@ gom_facebook_miner_class_init (GomFacebookMinerClass *klass)
   miner_class->miner_identifier = MINER_IDENTIFIER;
   miner_class->version = 1;
 
-  miner_class->create_service = create_service;
+  miner_class->create_services = create_services;
   miner_class->query = query_facebook;
 }

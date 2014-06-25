@@ -311,11 +311,13 @@ static void
 volume_added_cb (GVolumeMonitor *monitor, GVolume *volume, gpointer user_data)
 {
   SyncData *data = (SyncData *) user_data;
+  GoaObject *object;
 
-  if (!is_matching_volume (volume, GOA_OBJECT (data->job->service)))
+  object = GOA_OBJECT (g_hash_table_lookup (data->job->services, "documents"));
+  if (!is_matching_volume (volume, object))
     return;
 
-  g_object_set_data_full (data->job->service, "volume", g_object_ref (volume), g_object_unref);
+  g_object_set_data_full (G_OBJECT (object), "volume", g_object_ref (volume), g_object_unref);
   g_main_loop_quit (data->loop);
 }
 
@@ -335,6 +337,7 @@ query_owncloud (GomAccountMinerJob *job,
 {
   GomOwncloudMiner *self = GOM_OWNCLOUD_MINER (job->miner);
   GomOwncloudMinerPrivate *priv = self->priv;
+  GoaObject *object;
   GFile *root;
   GList *l;
   GList *volumes;
@@ -344,6 +347,17 @@ query_owncloud (GomAccountMinerJob *job,
   SyncData data;
   gboolean found = FALSE;
 
+  object = GOA_OBJECT (g_hash_table_lookup (job->services, "documents"));
+  if (object == NULL)
+    {
+      /* FIXME: use proper #defines and enumerated types */
+      g_set_error (error,
+                   g_quark_from_static_string ("gom-error"),
+                   0,
+                   "Can not query without a service");
+      return;
+    }
+
   data.job = job;
   volumes = g_volume_monitor_get_volumes (priv->monitor);
 
@@ -352,9 +366,9 @@ query_owncloud (GomAccountMinerJob *job,
     {
       GVolume *volume = G_VOLUME (l->data);
 
-      if (is_matching_volume (volume, GOA_OBJECT (job->service)))
+      if (is_matching_volume (volume, object))
         {
-          g_object_set_data_full (job->service, "volume", g_object_ref (volume), g_object_unref);
+          g_object_set_data_full (G_OBJECT (object), "volume", g_object_ref (volume), g_object_unref);
           found = TRUE;
         }
     }
@@ -371,7 +385,7 @@ query_owncloud (GomAccountMinerJob *job,
     }
 
   /* mount the volume if needed */
-  volume = G_VOLUME (g_object_get_data (job->service, "volume"));
+  volume = G_VOLUME (g_object_get_data (G_OBJECT (object), "volume"));
   mount = g_volume_get_mount (volume);
   if (mount == NULL)
     {
@@ -402,11 +416,19 @@ query_owncloud (GomAccountMinerJob *job,
   g_list_free_full (volumes, g_object_unref);
 }
 
-static GObject *
-create_service (GomMiner *self,
-                GoaObject *object)
+static GHashTable *
+create_services (GomMiner *self,
+                 GoaObject *object)
 {
-  return g_object_ref (object);
+  GHashTable *services;
+
+  services = g_hash_table_new_full (g_str_hash, g_str_equal,
+                                    NULL, (GDestroyNotify) g_object_unref);
+
+  if (gom_miner_supports_type (self, "documents"))
+    g_hash_table_insert (services, "documents", g_object_ref (object));
+
+  return services;
 }
 
 static void
@@ -438,7 +460,7 @@ gom_owncloud_miner_class_init (GomOwncloudMinerClass *klass)
   miner_class->miner_identifier = MINER_IDENTIFIER;
   miner_class->version = 1;
 
-  miner_class->create_service = create_service;
+  miner_class->create_services = create_services;
   miner_class->query = query_owncloud;
 
   g_type_class_add_private (klass, sizeof (GomOwncloudMinerPrivate));

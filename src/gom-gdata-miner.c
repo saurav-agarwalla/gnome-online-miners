@@ -40,6 +40,7 @@ account_miner_job_process_entry (GomAccountMinerJob *job,
                                  GError **error)
 {
   GDataEntry *entry = GDATA_ENTRY (doc_entry);
+  GDataService *service;
   gchar *resource = NULL;
   gchar *date, *identifier;
   const gchar *class = NULL;
@@ -239,8 +240,9 @@ account_miner_job_process_entry (GomAccountMinerJob *job,
       g_free (contact_resource);
     }
 
+  service = GDATA_SERVICE (g_hash_table_lookup (job->services, "documents"));
   access_rules = gdata_access_handler_get_rules (GDATA_ACCESS_HANDLER (entry),
-                                                 GDATA_SERVICE (job->service),
+                                                 service,
                                                  job->cancellable,
                                                  NULL, NULL, error);
 
@@ -312,11 +314,23 @@ query_gdata (GomAccountMinerJob *job,
   GDataDocumentsQuery *query;
   GDataDocumentsFeed *feed;
   GList *entries, *l;
+  GDataDocumentsService *service;
+
+  service = GDATA_DOCUMENTS_SERVICE (g_hash_table_lookup (job->services, "documents"));
+  if (service == NULL)
+    {
+      /* FIXME: use proper #defines and enumerated types */
+      g_set_error (error,
+                   g_quark_from_static_string ("gom-error"),
+                   0,
+                   "Can not query without a service");
+      return;
+    }
 
   query = gdata_documents_query_new (NULL);
   gdata_documents_query_set_show_folders (query, TRUE);
   feed = gdata_documents_service_query_documents
-    (GDATA_DOCUMENTS_SERVICE (job->service), query,
+    (service, query,
      job->cancellable, NULL, NULL, error);
 
   g_object_unref (query);
@@ -339,20 +353,28 @@ query_gdata (GomAccountMinerJob *job,
   g_object_unref (feed);
 }
 
-static GObject *
-create_service (GomMiner *self,
-                GoaObject *object)
+static GHashTable *
+create_services (GomMiner *self,
+                 GoaObject *object)
 {
   GDataGoaAuthorizer *authorizer;
   GDataDocumentsService *service;
+  GHashTable *services;
+
+  services = g_hash_table_new_full (g_str_hash, g_str_equal,
+                                    NULL, (GDestroyNotify) g_object_unref);
 
   authorizer = gdata_goa_authorizer_new (object);
-  service = gdata_documents_service_new (GDATA_AUTHORIZER (authorizer));
+
+  if (gom_miner_supports_type (self, "documents") && goa_object_peek_documents (object) != NULL)
+    {
+      service = gdata_documents_service_new (GDATA_AUTHORIZER (authorizer));
+      g_hash_table_insert (services, "documents", service);
+    }
 
   /* the service takes ownership of the authorizer */
   g_object_unref (authorizer);
-
-  return G_OBJECT (service);
+  return services;
 }
 
 static void
@@ -369,6 +391,6 @@ gom_gdata_miner_class_init (GomGDataMinerClass *klass)
   miner_class->miner_identifier = MINER_IDENTIFIER;
   miner_class->version = 3;
 
-  miner_class->create_service = create_service;
+  miner_class->create_services = create_services;
   miner_class->query = query_gdata;
 }
